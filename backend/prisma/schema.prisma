@@ -1,0 +1,111 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+  UPLOAD_IMAGE
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique @db.VarChar(255)
+  name         String     @db.VarChar(120)
+  passwordHash String     @map("password_hash")
+  role         Role       @default(USER)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Author {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(150)
+  createdAt DateTime @default(now()) @map("created_at")
+  books     Book[]
+
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "authors_name_trgm_idx")
+  @@map("authors")
+}
+
+model Publisher {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(150)
+  createdAt DateTime @default(now()) @map("created_at")
+  books     Book[]
+
+  @@map("publishers")
+}
+
+model Genre {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(80)
+  createdAt DateTime @default(now()) @map("created_at")
+  books     Book[]
+
+  @@map("genres")
+}
+
+model Book {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String    @db.VarChar(255)
+  authorId    String    @map("author_id") @db.Uuid
+  publisherId String    @map("publisher_id") @db.Uuid
+  genreId     String    @map("genre_id") @db.Uuid
+  price       Decimal   @db.Decimal(10, 2)
+  stock       Int       @default(0)
+  // derivado de stock > 0, persistido para indexarlo
+  isAvailable Boolean   @default(false) @map("is_available")
+  imageUrl    String?   @map("image_url") @db.VarChar(500)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  author    Author    @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Restrict)
+  genre     Genre     @relation(fields: [genreId], references: [id], onDelete: Restrict)
+
+  @@index([authorId])
+  @@index([publisherId])
+  @@index([genreId])
+  @@index([isAvailable])
+  @@index([price])
+  @@index([deletedAt])
+  @@index([createdAt])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "books_title_trgm_idx")
+  @@map("books")
+}
+
+model AuditLog {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String?     @map("user_id") @db.Uuid
+  action    AuditAction
+  entity    String      @db.VarChar(50)
+  entityId  String      @map("entity_id") @db.VarChar(64)
+  changes   Json?
+  ip        String?     @db.VarChar(64)
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
