@@ -19,13 +19,13 @@ export const bookSchema = z.object({
   publisher: name('La editorial', 150),
   genre: name('El género', 80),
   price: z
-    .number({ invalid_type_error: 'Ingresa un precio válido' })
+    .number({ error: 'Ingresa un precio válido' })
     .min(0, 'El precio no puede ser negativo')
     .max(99_999_999.99, 'El precio es demasiado alto')
     // se valida como texto para evitar los errores de punto flotante
     .refine((v) => /^\d+(\.\d{1,2})?$/.test(String(v)), 'Máximo 2 decimales'),
   stock: z
-    .number({ invalid_type_error: 'Ingresa un stock válido' })
+    .number({ error: 'Ingresa un stock válido' })
     .int('El stock debe ser un número entero')
     .min(0, 'El stock no puede ser negativo')
     .max(1_000_000, 'El stock es demasiado alto'),

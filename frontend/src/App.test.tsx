@@ -50,10 +50,10 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 
-  it('rutas desconocidas muestran 404', () => {
+  it('rutas desconocidas muestran 404', async () => {
     tokenStorage.save('t', adminUser, 60);
     renderApp('/no-existe');
-    expect(screen.getByText('Página no encontrada')).toBeInTheDocument();
+    expect(await screen.findByText('Página no encontrada')).toBeInTheDocument();
   });
 });
 

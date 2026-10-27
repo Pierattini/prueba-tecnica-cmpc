@@ -1,8 +1,12 @@
+import 'dotenv/config';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { SEED_BOOKS, SEED_USERS } from './seed-data';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
 
 const connectByName = (name: string) => ({
   connectOrCreate: { where: { name }, create: { name } },

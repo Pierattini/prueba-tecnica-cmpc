@@ -4,10 +4,13 @@ Aplicación full stack para administrar el inventario de libros: autenticación 
 
 | Capa | Tecnologías |
 | --- | --- |
-| Backend | NestJS 11, TypeScript, Prisma 6, PostgreSQL 16, passport-jwt, class-validator, Swagger |
-| Frontend | React 19, TypeScript, Vite, React Router 7, TanStack Query 5, axios, react-hook-form + zod |
-| Testing | Jest (backend), Vitest + Testing Library (frontend), cobertura mínima de 80% obligatoria |
-| DevOps | Docker multi-stage, docker-compose, nginx, GitHub Actions |
+| Runtime | Node.js 24 LTS |
+| Backend | NestJS 12, TypeScript 6, Prisma 7 (driver adapter `pg`), PostgreSQL 18, passport-jwt, class-validator, Swagger |
+| Frontend | React 19, TypeScript 6, Vite 8, React Router 7, TanStack Query 5, axios, react-hook-form + Zod 4 |
+| Testing | Jest 30 (backend), Vitest 5 + Testing Library (frontend), cobertura mínima de 80% obligatoria |
+| DevOps | Docker multi-stage, docker-compose, nginx 1.30, GitHub Actions |
+
+Todas las dependencias están en su última versión estable y `npm audit` reporta 0 vulnerabilidades en ambos proyectos.
 
 ---
 
@@ -41,7 +44,7 @@ Esto levanta tres servicios:
 | --- | --- | --- |
 | frontend | http://localhost:8080 | nginx con la SPA, hace proxy de `/api` y `/uploads` al backend |
 | backend | http://localhost:3000/api | Swagger en http://localhost:3000/api/docs |
-| postgres | localhost:5432 | volumen `pgdata`, con healthcheck |
+| postgres | localhost:5432 | PostgreSQL 18, volumen `pgdata`, con healthcheck |
 
 Al iniciar, el backend espera a que Postgres esté sano, aplica las migraciones (`prisma migrate deploy`), ejecuta el seed (que es idempotente) y recién entonces arranca la API. Las portadas subidas se guardan en el volumen `uploads`.
 
@@ -54,7 +57,9 @@ docker compose down -v     # detener y borrar los datos (volúmenes)
 
 ## 2. Instalación sin Docker
 
-Requisitos: Node.js 22+ y PostgreSQL 14+ con la extensión `pg_trgm` disponible (viene en el paquete `contrib`, incluido en las instalaciones estándar).
+Requisitos: **Node.js 24.9+** (LTS) y PostgreSQL 14+ con la extensión `pg_trgm` disponible (viene en el paquete `contrib`, incluido en las instalaciones estándar).
+
+> NestJS 12 se publica como ESM. El backend compila a CommonJS y carga esos paquetes con `require(esm)`, que es estable en Node 24. Por eso los scripts de test ejecutan Jest con `--experimental-vm-modules`: es el flag que necesita el runtime de Jest para cargar ESM desde CommonJS.
 
 Si no tienes Postgres instalado, puedes levantar solo la base con Docker: `docker compose up -d postgres`.
 
@@ -198,7 +203,7 @@ Los diagramas (Mermaid) están en [`docs/arquitectura.md`](docs/arquitectura.md)
 
 ## 7. Modelo de datos
 
-El DBML está en [`docs/modelo-relacional.dbml`](docs/modelo-relacional.dbml) (se puede pegar en [dbdiagram.io](https://dbdiagram.io)). El esquema se gestiona con **migraciones de Prisma** versionadas en `backend/prisma/migrations` (no se usa `db push`).
+El DBML está en [`docs/modelo-relacional.dbml`](docs/modelo-relacional.dbml) (se puede pegar en [dbdiagram.io](https://dbdiagram.io)). El esquema se gestiona con **migraciones de Prisma** versionadas en `backend/prisma/migrations` (no se usa `db push`). Como pide Prisma 7, la URL de conexión del CLI está en `backend/prisma.config.ts` y el cliente se conecta mediante el driver adapter `@prisma/adapter-pg`, sin motor binario.
 
 - **Normalización**: `books` referencia a `authors`, `publishers` y `genres` (FK con `ON DELETE RESTRICT`).
 - **Precio**: `DECIMAL(10,2)`. Nunca se usa coma flotante para dinero; se convierte a `number` solo al serializar.

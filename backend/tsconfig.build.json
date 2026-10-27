@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": { "rootDir": "./src", "incremental": false },
+  "compilerOptions": { "rootDir": "./src", "incremental": false, "types": ["node"] },
   "exclude": ["node_modules", "dist", "test", "src/test-utils", "**/*.spec.ts"]
 }

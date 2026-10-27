@@ -1,4 +1,5 @@
 import { ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { HealthController } from './health.controller';
 
@@ -19,7 +20,9 @@ describe('HealthController', () => {
 
 describe('PrismaService', () => {
   it('conecta al iniciar y desconecta al cerrar', async () => {
-    const service = new PrismaService();
+    const config = { getOrThrow: jest.fn().mockReturnValue('postgresql://u:p@localhost:5432/db') };
+    const service = new PrismaService(config as unknown as ConfigService);
+    expect(config.getOrThrow).toHaveBeenCalledWith('DATABASE_URL');
     const connect = jest.spyOn(service, '$connect').mockResolvedValue();
     const disconnect = jest.spyOn(service, '$disconnect').mockResolvedValue();
     await service.onModuleInit();

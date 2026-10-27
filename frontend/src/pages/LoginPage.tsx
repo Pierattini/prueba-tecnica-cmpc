@@ -7,7 +7,7 @@ import { getErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 
 const loginSchema = z.object({
-  email: z.string().trim().min(1, 'Ingresa tu email').email('El email no es válido'),
+  email: z.string().trim().min(1, 'Ingresa tu email').pipe(z.email('El email no es válido')),
   password: z.string().min(1, 'Ingresa tu contraseña'),
 });
 
