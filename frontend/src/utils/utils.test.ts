@@ -30,7 +30,8 @@ describe('sort utils', () => {
 describe('format utils', () => {
   it('formatea precios en pesos chilenos', () => {
     expect(formatPrice(18990)).toMatch(/\$\s?18\.990/);
-    expect(formatPrice(10.5)).toMatch(/10,5/);
+    expect(formatPrice(1234.5)).toMatch(/1\.234,50$/);
+    expect(formatPrice(18990)).not.toMatch(/,/);
   });
 
   it('formatea fechas', () => {
